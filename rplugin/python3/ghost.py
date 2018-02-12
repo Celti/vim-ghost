@@ -224,17 +224,16 @@ class Ghost(object):
         bufnr, fh = buffer_handler_map[websocket]
         buf_file = self.nvim.buffers[bufnr].name
         try:
-            self.nvim.command("bdelete! %d" % bufnr)
+            self.nvim.command("bdelete %d" % bufnr)
+            try:
+                os.close(fh)
+                os.remove(buf_file)
+                logger.debug("Deleted file %s and removed buffer %d", buf_file,
+                             bufnr)
+            except OSError as ose:
+                logger.error("Error while closing & deleting file %s", ose)
         except NvimError as nve:
             logger.error("Error while deleting buffer %s", nve)
-
-        try:
-            os.close(fh)
-            os.remove(buf_file)
-            logger.debug("Deleted file %s and removed buffer %d", buf_file,
-                         bufnr)
-        except OSError as ose:
-            logger.error("Error while closing & deleting file %s", ose)
 
         buffer_handler_map.pop(bufnr, None)
         buffer_handler_map.pop(websocket, None)
